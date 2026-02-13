@@ -1,0 +1,94 @@
+# LLM Security Testing Framework Configuration
+# GOOGLE GEMINI VERSION - FREE TIER AVAILABLE!
+
+# Target models to test
+targets:
+  - name: "gemini-flash"
+    type: "gemini_api"
+    model_name: "gemini-2.5-flash"  # Fast, cheap, free tier available
+    auth:
+      token: "${GEMINI_API_KEY}"  # Set via environment variable
+    parameters:
+      temperature: 0.7
+      max_tokens: 1000
+      top_p: 0.95
+      top_k: 40
+      # Optional: Adjust safety settings
+      # safety_settings:
+      #   - category: "HARM_CATEGORY_HARASSMENT"
+      #     threshold: "BLOCK_MEDIUM_AND_ABOVE"
+    timeout: 30
+    max_retries: 3
+
+# Judge model (evaluates attack results)
+judge_model:
+  name: "gemini-judge"
+  type: "gemini_api"
+  model_name: "gemini-2.5-flash"  # Same model for evaluation
+  auth:
+    token: "${GEMINI_API_KEY}"
+  parameters:
+    temperature: 0.3  # Lower temp for more consistent evaluation
+    max_tokens: 500
+    top_p: 0.95
+  timeout: 30
+  max_retries: 3
+
+# Execution settings - Conservative for free tier
+execution:
+  pool_size: 3
+  rate_limit_rpm: 15  # Free tier: 15 RPM for Flash, 2 RPM for Pro
+  max_concurrent_attacks: 2
+  delay_between_attacks_ms: 2000  # 2 second delay
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 3
+    timeout_seconds: 60
+    half_open_max_requests: 2
+
+# Attack configuration
+attacks:
+  sources:
+    - type: "local_yaml"
+      path: "attacks"
+  
+  # Start with limited categories
+  categories:
+    - "PROMPT_INJECTION"
+    - "JAILBREAK"
+  
+  # Start with low/medium complexity
+  complexity_levels:
+    - "LOW"
+    - "MEDIUM"
+
+# Evaluation settings
+evaluation:
+  methods:
+    llm_judge:
+      enabled: true
+      confidence_threshold: 0.7
+    
+    pattern_matching:
+      enabled: true
+    
+    semantic_analysis:
+      enabled: false
+
+# Logging
+logging:
+  output_dir: "./logs"
+  level: "INFO"
+
+# Reporting
+reporting:
+  output_dir: "./reports"
+  formats:
+    - "html"
+    - "json"
+
+# Notes on Gemini Free Tier Limits:
+# - Gemini 1.5 Flash: 15 RPM, 1 million TPM, 1,500 RPD (requests per day)
+# - Gemini 1.5 Pro: 2 RPM, 32,000 TPM, 50 RPD
+# - Free tier is quite generous for testing!
+# - See: https://ai.google.dev/pricing

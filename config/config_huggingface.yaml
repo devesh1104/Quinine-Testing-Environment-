@@ -1,0 +1,72 @@
+# LLM Security Testing Framework - HuggingFace Configuration
+# Using Mistral 7B Instruct (free, unlimited requests, fast response)
+# Get your API key from: https://huggingface.co/settings/tokens
+
+targets:
+  - name: "mistral-7b-instruct"
+    type: "huggingface_api"
+    model_name: "mistralai/Mistral-7B-Instruct-v0.2"  # Ultra-fast, unrestricted model
+    auth:
+      token: "${HF_API_KEY}"  # Set via environment variable
+    parameters:
+      temperature: 0.7
+      max_tokens: 512  # Optimal for security testing
+      top_p: 0.95
+    timeout: 60  # HF takes longer for first request (model loading)
+    max_retries: 3
+
+# Judge model (evaluates attack results) - also using Mistral
+judge_model:
+  name: "mistral-judge"
+  type: "huggingface_api"
+  model_name: "mistralai/Mistral-7B-Instruct-v0.2"
+  auth:
+    token: "${HF_API_KEY}"
+  parameters:
+    temperature: 0.3  # Lower temp for consistent evaluation
+    max_tokens: 300
+    top_p: 0.95
+  timeout: 60
+  max_retries: 3
+
+# Execution settings - Optimized for HuggingFace
+execution:
+  pool_size: 5  # Multiple concurrent requests (no rate limits!)
+  rate_limit_rpm: 1000  # HuggingFace has no strict RPM limits for free tier
+  max_concurrent_attacks: 5  # Can run multiple in parallel
+  delay_between_attacks_ms: 100  # Minimal delay
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 10  # Higher threshold since HF is reliable
+    timeout_seconds: 60
+    half_open_max_requests: 5
+
+# Attack configuration
+attacks:
+  sources:
+    - type: "local_yaml"
+      path: "attacks"  # Directory containing YAML attack files
+  
+  # Test these categories aggressively
+  categories:
+    - "PROMPT_INJECTION"
+    - "JAILBREAK"
+    - "SENSITIVE_INFO_DISCLOSURE"
+    - "HALLUCINATION"
+  
+  # Complexity levels to test
+  complexity_levels:
+    - "LOW"
+    - "MEDIUM"
+
+# Reporting
+reporting:
+  format: "html"  # Generate beautiful HTML reports
+  include_raw_responses: true
+  output_dir: "reports"
+
+# Performance monitoring
+monitoring:
+  enabled: true
+  metrics_interval_seconds: 10
+  log_level: "INFO"

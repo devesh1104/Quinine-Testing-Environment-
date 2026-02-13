@@ -1,0 +1,81 @@
+# LLM Security Testing Framework - Local GGUF Configuration
+# Uses locally-hosted Mistral model via GGUF format
+# Model: Mistral 7B Instruct Q4_K_M quantization
+
+# Target models to test
+targets:
+  - name: "mistral-local-gguf"
+    type: "local_gguf"
+    # Full path to your GGUF model file
+    model_name: "C:\\Users\\acer\\Desktop\\Intership@quinine\\official Work-week 1\\My work\\llm_security_assessment\\models\\mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+    parameters:
+      temperature: 0.7
+      max_tokens: 512
+      top_p: 0.95
+    timeout: 120  # Local inference can be slower
+    max_retries: 2
+
+# Judge model - Using same local model for evaluation
+judge_model:
+  name: "mistral-judge-gguf"
+  type: "local_gguf"
+  model_name: "C:\\Users\\acer\\Desktop\\Intership@quinine\\official Work-week 1\\My work\\llm_security_assessment\\models\\mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+  parameters:
+    temperature: 0.3  # Lower for consistent evaluation
+    max_tokens: 300
+    top_p: 0.95
+  timeout: 120
+  max_retries: 2
+
+# Execution settings - Optimized for local inference
+execution:
+  pool_size: 1  # Local GGUF is single-threaded for inference
+  rate_limit_rpm: 60  # Not applicable for local, but kept for compatibility
+  max_concurrent_attacks: 1  # Run sequentially to avoid memory issues
+  delay_between_attacks_ms: 500
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    timeout_seconds: 120
+    half_open_max_requests: 1
+
+# Attack configuration
+attacks:
+  sources:
+    - type: "local_yaml"
+      path: "attacks"  # Directory containing YAML attack files
+  
+  categories:
+    - "PROMPT_INJECTION"
+    - "JAILBREAK"
+    - "SENSITIVE_INFO_DISCLOSURE"
+    - "HALLUCINATION"
+  
+  complexity_levels:
+    - "LOW"
+    - "MEDIUM"
+
+# Evaluation settings
+evaluation:
+  methods:
+    llm_judge:
+      enabled: true
+      confidence_threshold: 0.7
+    
+    pattern_matching:
+      enabled: true
+    
+    semantic_analysis:
+      enabled: false
+
+# Logging
+logging:
+  output_dir: "./logs"
+  level: "INFO"
+
+# Reporting
+reporting:
+  output_dir: "./reports"
+  formats:
+    - "html"
+    - "json"
