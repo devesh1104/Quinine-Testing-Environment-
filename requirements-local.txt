@@ -1,0 +1,12 @@
+# Core dependencies always needed
+aiohttp==3.9.1
+pyyaml==6.0.1
+jinja2==3.1.2
+
+# For local GGUF model support (Mistral)
+llama-cpp-python==0.2.36
+
+# Optional GPU support:
+# For NVIDIA CUDA: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
+# For Apple Metal: CMAKE_ARGS='-DLLAMA_METAL=on' pip install llama-cpp-python
+# For AMD ROCm: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/rocm
